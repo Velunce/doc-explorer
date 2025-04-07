@@ -7,7 +7,11 @@ import Modal from "./modal.component";
 import { Field, Input, Label } from "@headlessui/react";
 import clsx from "clsx";
 
-const DocumentsComponent = () => {
+interface DocumentWrapperProps {
+  rootId: number;
+}
+
+const DocumentsComponent = ({ rootId }: DocumentWrapperProps) => {
   const columns = [
     { key: "name", label: "Name", shortable: true },
     { key: "createdBy", label: "Created by" },
@@ -15,10 +19,11 @@ const DocumentsComponent = () => {
     { key: "size", label: "File size" },
   ];
   const [openModal, setOpenModal] = useState(false);
-  const [status, setStatus] = useState<string>("");
   const [data, setData] = useState([]);
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
-  const [folderId, setFolderId] = useState<number>(1); // Default folder ID
+  const [folderId, setFolderId] = useState<number>(rootId); // Default folder ID
+
+  const [folderName, setFolderName] = useState<string>("");
 
   const handleModalClose = () => {
     setOpenModal(false);
@@ -48,13 +53,11 @@ const DocumentsComponent = () => {
       }
 
       const result = await res.json();
-      setStatus(result.message || "Upload successful");
 
       // Refresh the document list after upload
       await getDocumentsByFolderId();
     } catch (error) {
       console.error("Error uploading files:", error);
-      setStatus("Failed to upload files");
     }
   };
 
@@ -70,17 +73,58 @@ const DocumentsComponent = () => {
     }
   };
 
-  const handleCreateFolder = () => {};
+  const handleCreateFolder = () => {
+    if (!folderName) {
+      return;
+    }
 
-  const getDocumentsByFolderId = useCallback(async () => {
+    fetch("/api/folder", {
+      method: "POST",
+      body: JSON.stringify({
+        name: folderName,
+        parentId: folderId,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to create folder");
+        }
+        return res.json();
+      })
+      .then((result) => {
+        setOpenModal(false);
+        getDocumentsByFolderId();
+      })
+      .catch((error) => {
+        console.error("Error creating folder:", error);
+      });
+  };
+
+  const getDocumentsByFolderId = async () => {
     const res = await fetch(`/api/folder/${folderId}`);
     const result = await res.json();
     setData(result);
-  }, []);
+  };
+
+  const handleOnRowClick = (row: any) => {
+    console.log(row);
+    const { type } = row;
+    if (type === "folder") {
+      setFolderId(row.id);
+    } else {
+      // Handle file click
+      console.log("File clicked:", row);
+    }
+  };
 
   useEffect(() => {
     getDocumentsByFolderId();
   }, []);
+
+  useEffect(() => {
+    console.log(folderId);
+    getDocumentsByFolderId();
+  }, [folderId]);
 
   return (
     <div className="h-screen flex flex-col p-4">
@@ -103,10 +147,10 @@ const DocumentsComponent = () => {
         </div>
       </div>
       <div className="mt-4 mb-6">Search</div>
-      <Table data={data} columns={columns} selectable />
-      <Modal open={openModal} onClose={handleModalClose} title="Create new folder">
+      <Table data={data} columns={columns} selectable onRowClick={(row) => handleOnRowClick(row)} />
+      <Modal open={openModal} onClose={handleModalClose} onConfirm={handleCreateFolder} title="Create new folder">
         <Field>
-          <Input id="folder-name" className={clsx("w-ful mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-black dark:text-white", "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25")} />
+          <Input id="folder-name" className={clsx("w-ful mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-black dark:text-white", "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25")} onChange={(e) => setFolderName(e.target.value)} />
         </Field>
       </Modal>
     </div>

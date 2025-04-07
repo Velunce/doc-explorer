@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, Relation, OneToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Folder } from "./Folder";
 
 @Entity()
 export class Document {
@@ -17,8 +18,8 @@ export class Document {
   @Column()
   size: number;
 
-  @Column()
-  folderId: number;
+  @ManyToOne("Folder", "documents", { onDelete: "CASCADE" }) // Define the relationship
+  folder: Folder; // Reference the folder
 
   @CreateDateColumn()
   createdAt: Date;

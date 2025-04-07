@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 
 interface Column {
@@ -91,7 +93,7 @@ const Table: React.FC<TableProps> = ({ data, columns, selectable = false, onRowC
         </thead>
         <tbody>
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600" onClick={() => onRowClick && onRowClick(row)}>
+            <tr key={rowIndex} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => (onRowClick ? onRowClick(row) : false)}>
               {selectable && (
                 <td className="p-4">
                   <div className="flex items-center">
@@ -100,14 +102,7 @@ const Table: React.FC<TableProps> = ({ data, columns, selectable = false, onRowC
                 </td>
               )}
               {columns.map((column) => (
-                <td
-                  key={column.key}
-                  className="px-6 py-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCellClick && onCellClick(row, column.key);
-                  }}
-                >
+                <td key={column.key} className="px-6 py-4">
                   {column.render ? column.render(row[column.key], row) : row[column.key]}
                 </td>
               ))}

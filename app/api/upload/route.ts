@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { connectDB } from "@/lib/db";
 import { Document } from "@/entities/Document";
+import { Folder } from "@/entities/Folder";
 
 const uploadDir = path.join(process.cwd(), "public/uploads");
 
@@ -33,14 +34,28 @@ export async function POST(request: NextRequest) {
 
   const db = await connectDB();
   const docRepo = db.getRepository(Document);
+  const folderRepo = db.getRepository(Folder);
+
   const folderIdNum = Number(folderId);
 
   if (isNaN(folderIdNum)) {
     return NextResponse.json({ error: "Invalid folder id" }, { status: 400 });
   }
 
+  const folder = await folderRepo.findOne({ where: { id: folderIdNum } });
+
+  if (!folder) {
+    return NextResponse.json({ error: "Folder not found" }, { status: 404 });
+  }
+
+  const folderPath = folder.parent
+    ? path.join(folder.parent.path, folder.path) // Combine parent folder path with current folder path
+    : folder.path;
+
+  console.log("Folder path:", folderPath);
+
   for (const file of files) {
-    const filePath = path.join(uploadDir, file.name);
+    const filePath = path.join(folderPath, file.name);
 
     try {
       // Convert the file Blob to a Buffer
@@ -52,17 +67,17 @@ export async function POST(request: NextRequest) {
       // Add the file details to the savedFiles array
       savedFiles.push({
         name: file.name,
+        filePath: folder.path,
+        fileType: file.type,
         size: file.size,
-        type: file.type,
-        path: `/uploads/${file.name}`,
       });
 
       const saved = await docRepo.save({
         name: file.name,
-        filePath: `/uploads/${file.name}`,
+        filePath: folder.path,
         fileType: file.type,
         size: file.size,
-        folderId: folderIdNum,
+        folder: { id: folderIdNum },
       });
       savedFiles.push(saved);
     } catch (error) {

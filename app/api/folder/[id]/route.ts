@@ -18,13 +18,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   // Query only the immediate subfolders of the current folder
   const subfolders = await folderRepo.find({
-    where: { parentId: folderId },
+    where: { parent: { id: folderId } },
     select: ["id", "name", "createdAt"],
   });
 
   // Query only the files in the current folder
   const documents = await docRepo.find({
-    where: { folderId: folderId },
+    where: { folder: { id: folderId } },
     select: ["id", "name", "createdAt", "size"],
   });
 
