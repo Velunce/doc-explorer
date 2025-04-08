@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { Folder } from "./Folder";
+import { User } from "./User";
 
 @Entity()
 export class Document {
@@ -20,6 +21,9 @@ export class Document {
 
   @ManyToOne("Folder", "documents", { onDelete: "CASCADE" }) // Define the relationship
   folder: Folder; // Reference the folder
+
+  @ManyToOne("User", "documents", { onDelete: "CASCADE" }) // Define the relationship
+  creator: User;
 
   @CreateDateColumn()
   createdAt: Date;

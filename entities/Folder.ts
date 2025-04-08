@@ -1,6 +1,7 @@
 // Folder.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne } from "typeorm";
 import { Document } from "./Document";
+import { User } from "./User";
 
 @Entity()
 export class Folder {
@@ -18,6 +19,9 @@ export class Folder {
 
   @OneToMany("Document", "folder")
   documents: Document[];
+
+  @ManyToOne("User", "folder", { onDelete: "CASCADE" }) // Define the relationship
+  creator: User;
 
   @Column()
   path: string;

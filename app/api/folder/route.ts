@@ -1,39 +1,44 @@
 // app/api/folder/route.ts
+import fs from "fs";
+import path from "path";
 import { connectDB } from "@/lib/db";
 import { Folder } from "@/entities/Folder";
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import { IsNull } from "typeorm";
+import { User } from "@/entities/User";
 
 const uploadDir = path.join(process.cwd(), "public/uploads");
 
+/**
+ * GET Handler
+ *
+ * Retrieves the root folder from the database based on the `DOC_ROOT_FOLDER` environment variable.
+ *
+ * @param {NextRequest} request - The incoming HTTP request.
+ * @returns {NextResponse} - A JSON response containing the root folder details.
+ */
 export async function GET(request: NextRequest) {
   const db = await connectDB();
   const { DOC_ROOT_FOLDER } = await process.env;
-  console.log(DOC_ROOT_FOLDER);
   const folderRepo = db.getRepository(Folder);
 
+  // Check if the root folder exists in the database
   let rootFolder = await folderRepo.findOne({ where: { path: DOC_ROOT_FOLDER } });
-
-  let newRootFolder;
-  if (!rootFolder) {
-    newRootFolder = await folderRepo.save({
-      name: "root",
-      path: DOC_ROOT_FOLDER,
-      parent: null,
-      documents: [],
-      children: [],
-    });
-  }
-
-  return NextResponse.json({ ...(rootFolder || newRootFolder) });
+  return NextResponse.json({ rootFolder });
 }
 
+/**
+ * POST Handler
+ *
+ * Creates a new folder in the database and on the filesystem.
+ *
+ * @param {NextRequest} request - The incoming HTTP request.
+ * @returns {NextResponse} - A JSON response indicating the success or failure of the operation.
+ */
 export async function POST(request: NextRequest) {
   const data = await request.json();
-  const { parentId, name } = data;
+  const { parentId, name, createdBy } = data;
 
+  // Validate the folder name
   if (!name || typeof name !== "string") {
     return NextResponse.json({ error: "Invalid folder name" }, { status: 400 });
   }
@@ -50,17 +55,18 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Create the new folder
+  // Create the new folder in the database
   const newFolder = await folderRepo.save({
     name,
     parent: parentFolder,
     path: parentFolder ? path.join(parentFolder.path, name) : name,
     documents: [],
     children: [],
+    creator: { id: createdBy }, // Assuming the creator is the admin for simplicity
   });
 
   // Create the folder on the filesystem
-  const folderPath = path.join(uploadDir, name);
+  const folderPath = path.join(parentFolder ? parentFolder.path : uploadDir, name);
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath, { recursive: true });
   }
