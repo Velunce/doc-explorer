@@ -1,8 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## About
+
+This is a simple file management system. Based on Next.js, TypeScript, TypeORM and MySQL (supports versions higher than 8).
+
+Functions include file upload, creating folders and subdirectories, and uploading files in subdirectories.
+
+Due to personal time constraints, it took only 14 hours to complete this project. Most of the functions of the file management system are provided in the project as much as possible.
+
+## Enviroment
+
+Node.js latest LTS version
+
+MySQL Community Server (9.2.0) or 8 above
+(Option: MySQL Docker)
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies
+
+```bash
+npm install
+```
+
+Setup project via command
+
+```bash
+npm run setup
+```
+
+Setup MySQL at 'lib/data-source.ts'
+
+<mark>Be sure to create a database in MySQL first.</mark>
+
+```JavaScript
+// lib/data-source.ts
+{
+  type: "mysql",
+  host: "127.0.0.1",
+  port: 3306,
+  username: "YOUR_USERNAME", // Replace with your database username
+  password: "YOUR_PASSWORD", // Replace with your database password
+  database: "YOUR_DATABASE", // Replace with your database name
+  synchronize: true, // Enable automatic table synchronization during development
+  entities: [Document, Folder, User],
+}
+```
+
+Run it now !
 
 ```bash
 npm run dev
@@ -16,21 +59,91 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project constructure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Project Tree
+.
+├── README.md
+├── app
+│   ├── api
+│   │   ├── folder
+│   │   │   ├── [id]
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── upload
+│   │   │   └── route.ts
+│   │   └── user
+│   │       └── route.ts
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── login
+│   │   └── page.tsx # The login page is also the registration page.
+│   └── page.tsx
+├── components
+│   ├── button.component.tsx
+│   ├── documents.component.tsx
+│   ├── modal.component.tsx
+│   └── table.component.tsx
+├── entities    # TypeORM entities
+│   ├── Document.ts
+│   ├── Folder.ts
+│   └── User.ts
+├── lib
+│   ├── data-source.ts  # Config MySQL Database
+│   ├── db.ts
+│   └── utils.ts
+├── .env.local  # Create via command 'npm run setup'
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── uploads # Create via command 'npm run setup'. Upload file location.
+│   ├── vercel.svg
+│   └── window.svg
+├── setup.sh
+├── tsconfig.json
+└── types.ts
+```
 
-## Learn More
+## Instructions
 
-To learn more about Next.js, take a look at the following resources:
+The default page for the first use is to jump to the login page, where the user enters the email address, password, and name to create a user.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+You can log in on this page later using the corresponding account.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Screenshots
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Initialization and login page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![Login Page](instructions/login-or-register.png)
+
+### File Management Dashboard
+
+![Dashboard](instructions/doc-root-list.png)
+
+### Subfolder Example
+
+![Create Folder](instructions/doc-sub-folder-list.png)
+
+---
+
+## Notes
+
+- <mark>Ensure that a MySQL database is created beforehand, and configure the database name correctly in 'lib/data-source.ts'.</mark>
+- Ensure that the `uploads` folder is created during the setup process. This folder is used to store uploaded files.
+- The database schema is automatically synchronized during development (`synchronize: true` in `lib/data-source.ts`).
+
+---
+
+## License
+
+This project is licensed under the MIT License.

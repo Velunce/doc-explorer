@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon, ArrowRightIcon, BarsArrowDownIcon, BarsArrowUpIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, EllipsisHorizontalIcon, EllipsisVerticalIcon, FolderIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowTurnLeftUpIcon, BarsArrowDownIcon, BarsArrowUpIcon, ChevronLeftIcon, ChevronRightIcon, DocumentTextIcon, EllipsisHorizontalIcon, EllipsisVerticalIcon, FolderIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useRef, useState } from "react";
 import { FileTypeEnum } from "@/types";
 
@@ -144,24 +144,23 @@ const Table: React.FC<TableProps> = ({ data, columns, selectable = false, onRowC
           <tbody>
             {data.map((row, rowIndex) => (
               <tr key={rowIndex} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer" onClick={() => (onRowClick ? onRowClick(row) : false)}>
-                {selectable && (
-                  <td className="p-4">
+                {selectable && !row.turnUp && (
+                  <td className={`p-${row.turnUp ? 2 : 4}`}>
                     <div className="flex items-center">
                       <input type="checkbox" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" checked={selectedRows.has(rowIndex)} onChange={() => handleRowSelect(rowIndex)} onClick={(e) => e.stopPropagation()} />
                     </div>
                   </td>
                 )}
                 {columns.map((column, index) => (
-                  <td key={column.key} className="px-6 py-4">
+                  <td key={column.key} className={`px-6 py-${row.turnUp ? 2 : 4}`}>
                     <div className="flex items-center gap-1">
-                      {index === 0 ? row.type === FileTypeEnum.folder ? <FolderIcon className="size-6 text-yellow-600" /> : <DocumentTextIcon className="size-5 text-blue-500" /> : null}
-                      {row[column.key] ? (column.render ? column.render(row[column.key], row) : row[column.key]) : "-"}
+                      {index === 0 ? row.type === FileTypeEnum.folder ? row.turnUp ? <ArrowTurnLeftUpIcon className="size-6 text-yellow-600" /> : <FolderIcon className="size-6 text-yellow-600" /> : <DocumentTextIcon className="size-5 text-blue-500" /> : null}
+                      {row[column.key] ? (column.render ? column.render(row[column.key], row) : row[column.key]) : row.turnUp ? "" : "-"}
                     </div>
                   </td>
                 ))}
-                <td className="p-4">
-                  <EllipsisHorizontalIcon className="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-pointer" />
-                </td>
+
+                <td className={`p-${row.turnUp ? 2 : 4}`}>{!row.turnUp && <EllipsisHorizontalIcon className="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-pointer" />}</td>
               </tr>
             ))}
           </tbody>

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Folder } from "@/entities/Folder";
 import { Document } from "@/entities/Document";
 import { NextRequest, NextResponse } from "next/server";
+import { FileTypeEnum } from "@/types";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const { id } = await params;
@@ -35,6 +36,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     where: { folder: { id: folderId } },
     relations: ["creator"],
   });
+
+  const folderInfo = await folderRepo.findOne({ where: { id: folderId }, relations: ["parent"] });
+
+  console.log("folderInfo", folderInfo);
 
   let combinedResults: any = [];
   // Combine results
@@ -83,6 +88,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const total = combinedResults.length;
   const totalPages = Math.ceil(total / pageSize);
   const paginatedResults = combinedResults.slice((page - 1) * pageSize, page * pageSize);
+
+  // Add the parent folder as go back trigger
+  if (folderInfo?.parent && folderInfo?.parent?.id) {
+    paginatedResults.unshift({ type: FileTypeEnum.folder, id: folderInfo.parent.id, name: "..", createdAt: null, createdBy: null, size: null, turnUp: true });
+  }
 
   return NextResponse.json({ total, totalPages, currentPage: page, pageSize, data: paginatedResults }, { status: 200 });
 }
